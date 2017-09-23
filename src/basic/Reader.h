@@ -13,43 +13,6 @@ using namespace std;
 #include "Instance.h"
 #include "Targets.h"
 
-class Reader {
-public:
-    Reader() {}
-
-    virtual ~Reader() {
-        if (m_inf.is_open()) m_inf.close();
-    }
-    int startReading(const char *filename) {
-        if (m_inf.is_open()) {
-            m_inf.close();
-            m_inf.clear();
-        }
-        m_inf.open(filename);
-
-        if (!m_inf.is_open()) {
-            cout << "Reader::startReading() open file err: " << filename << endl;
-            return -1;
-        }
-
-        return 0;
-    }
-
-    void finishReading() {
-        if (m_inf.is_open()) {
-            m_inf.close();
-            m_inf.clear();
-        }
-    }
-    virtual Instance *getNext() = 0;
-protected:
-    ifstream m_inf;
-
-    int m_numInstance;
-
-    Instance m_instance;
-};
-
 vector<string> readLines(const string &fullFileName) {
     vector<string> lines;
     std::ifstream input(fullFileName);
@@ -100,7 +63,6 @@ void readLineToInstance(const string &line, Instance *instance) {
     for (int i = 0; i < 3; ++i) {
         Stance stance = static_cast<Stance>(i);
         const string &stanceStr = StanceToString(stance);
-        //                std::cout << "stanceStr:" << stanceStr <<std::endl;
         std::regex regex(stanceStr + "\r?$");
         for (auto it = std::sregex_iterator(line.begin(), line.end(), regex);
             it != std::sregex_iterator();
