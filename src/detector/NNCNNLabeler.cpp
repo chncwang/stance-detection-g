@@ -318,7 +318,7 @@ void Classifier::train(const string &trainFile, const string &devFile,
             if (m_options.saveIntermediate && avgFMeasure > bestDIS) {
                 std::cout << "Exceeds best previous performance of " << bestDIS
                     << " now is " << avgFMeasure << ". Saving model file.." << std::endl;
-                std::cout << "laozhongyi_" << avgFMeasure << std::endl;
+                std::cout << "laozhongyi_" << std::min<float>(avgFMeasure, testAvg) << std::endl;
                 non_exceeds_time = 0;
                 bestDIS = avgFMeasure;
                 writeModelFile(modelFile);
