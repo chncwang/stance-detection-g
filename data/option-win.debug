@@ -1,0 +1,11 @@
+dropProb = 0.5
+batchSize = 1
+wordCutOff = 4
+wordEmbFineTune = false
+maxIter = 1000
+maxInstance = -1
+outBest = .debug
+hiddenSize = 50
+wordEmbSize = 100
+adaAlpha = 0.001
+postProcess = true
