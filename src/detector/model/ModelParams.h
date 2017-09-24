@@ -39,8 +39,6 @@ public:
         tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
-        tweet_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
-        tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         noncond_tweet_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         noncond_tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         return true;
@@ -68,8 +66,8 @@ public:
         target_right_to_left_lstm_params.exportAdaParams(ada);
         tweet_left_to_right_lstm_params.exportAdaParams(ada);
         tweet_right_to_left_lstm_params.exportAdaParams(ada);
-        tweet_left_to_right_lstm_params.exportAdaParams(ada);
-        tweet_right_to_left_lstm_params.exportAdaParams(ada);
+        noncond_tweet_left_to_right_lstm_params.exportAdaParams(ada);
+        noncond_tweet_right_to_left_lstm_params.exportAdaParams(ada);
     }
 
 
