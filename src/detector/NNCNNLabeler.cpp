@@ -188,7 +188,7 @@ void Classifier::train(const string &trainFile, const string &devFile,
         int batchBlock = indexes.size() / m_options.batchSize;
         if (indexes.size() % m_options.batchSize != 0)
             batchBlock++;
-        Metric favorMetric, againstMetric, neuralMetric, overallMetric;
+        Metric favorMetric, againstMetric, neuralMetric, overallMetric, targetMetric;
         auto time_start = std::chrono::high_resolution_clock::now();
         for (int updateIter = 0; updateIter < batchBlock; updateIter++) {
             subExamples.clear();
@@ -202,7 +202,8 @@ void Classifier::train(const string &trainFile, const string &devFile,
             }
 
             int curUpdateIter = iter * batchBlock + updateIter;
-            dtype cost = m_driver.train(subExamples, curUpdateIter);
+            std::pair<dtype, dtype> pair = m_driver.train(subExamples, curUpdateIter);
+            //std::cout << "cost:" << pair.first << " target cost:" << pair.second << std::endl;
 
             favorMetric.overall_label_count += m_driver._favor_metric.overall_label_count;
             favorMetric.correct_label_count += m_driver._favor_metric.correct_label_count;
@@ -213,6 +214,8 @@ void Classifier::train(const string &trainFile, const string &devFile,
             neuralMetric.overall_label_count += m_driver._neural_metric.overall_label_count;
             neuralMetric.correct_label_count += m_driver._neural_metric.correct_label_count;
             neuralMetric.predicated_label_count += m_driver._neural_metric.predicated_label_count;
+            targetMetric.correct_label_count += m_driver._neural_metric.correct_label_count;
+            targetMetric.overall_label_count += m_driver._neural_metric.overall_label_count;
             m_driver.updateModel();
 
             if (updateIter % 10 == 1) {
@@ -224,6 +227,7 @@ void Classifier::train(const string &trainFile, const string &devFile,
                 againstMetric.print();
                 std::cout << "neural:" << std::endl;
                 neuralMetric.print();
+                targetMetric.print();
             }
         }
 

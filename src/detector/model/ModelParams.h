@@ -3,6 +3,7 @@
 #include "HyperParams.h"
 #include "MySoftMaxLoss.h"
 #include "ConditionalLSTM.h"
+#include "Targets.h"
 #include "LSTM1.h"
 
 // Each model consists of two parts, building neural graph and defining output losses.
@@ -11,10 +12,13 @@ public:
     LookupTable words; // should be initialized outside
     Alphabet wordAlpha; // should be initialized outside
     UniParams olayer_linear; // output
+    UniParams target_linear;
     ConditionalLSTMParams tweet_left_to_right_lstm_params;
     ConditionalLSTMParams tweet_right_to_left_lstm_params;
     ConditionalLSTMParams target_left_to_right_lstm_params;
     ConditionalLSTMParams target_right_to_left_lstm_params;
+    LSTM1Params noncond_tweet_left_to_right_lstm_params;
+    LSTM1Params noncond_tweet_right_to_left_lstm_params;
     MySoftMaxLoss loss;
 
     bool initial(HyperParams& opts){
@@ -28,12 +32,17 @@ public:
         opts.wordWindow = opts.wordContext * 2 + 1;
         opts.windowOutput = opts.wordDim * opts.wordWindow;
         opts.labelSize = 3;
-        opts.inputSize = opts.hiddenSize * 2;
+        opts.inputSize = opts.hiddenSize * 4;
         olayer_linear.initial(opts.labelSize, opts.inputSize, true);
+        target_linear.initial(DOMAIN_SIZE, opts.hiddenSize * 2, true);
         tweet_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
+        tweet_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
+        tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
+        noncond_tweet_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
+        noncond_tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         return true;
     }
 
@@ -54,8 +63,11 @@ public:
     void exportModelParams(ModelUpdate& ada){
         words.exportAdaParams(ada);
         olayer_linear.exportAdaParams(ada);
+        target_linear.exportAdaParams(ada);
         target_left_to_right_lstm_params.exportAdaParams(ada);
         target_right_to_left_lstm_params.exportAdaParams(ada);
+        tweet_left_to_right_lstm_params.exportAdaParams(ada);
+        tweet_right_to_left_lstm_params.exportAdaParams(ada);
         tweet_left_to_right_lstm_params.exportAdaParams(ada);
         tweet_right_to_left_lstm_params.exportAdaParams(ada);
     }

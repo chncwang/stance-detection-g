@@ -12,8 +12,13 @@ public:
     vector<LookupNode> _inputNodes;
     ConditionalLSTMBuilder _left2right;
     ConditionalLSTMBuilder _right2left;
+    LSTM1Builder _left2right_tweet;
+    LSTM1Builder _right2left_tweet;
     ConcatNode _concatNode;
+    ConcatNode _targetConcatNode;
     UniNode _neural_output;
+    UniNode _target_output;
+    GrlNode _grl_node;
 
     Graph *_graph;
     ModelParams *_modelParams;
@@ -25,6 +30,8 @@ public:
         _inputNodes.resize(length_upper_bound);
         _left2right.resize(length_upper_bound);
         _right2left.resize(length_upper_bound);
+        _left2right_tweet.resize(length_upper_bound);
+        _right2left_tweet.resize(length_upper_bound);
     }
 
 public:
@@ -37,7 +44,15 @@ public:
         _left2right.init(opts.dropProb, &model.target_left_to_right_lstm_params, true);
         _right2left.init(opts.dropProb, &model.target_right_to_left_lstm_params, false);
 
-        _concatNode.init(opts.hiddenSize * 2, -1);
+        _left2right_tweet.init(&model.noncond_tweet_left_to_right_lstm_params, opts.dropProb, true);
+        _right2left_tweet.init(&model.noncond_tweet_right_to_left_lstm_params, opts.dropProb, false);
+
+        _concatNode.init(opts.hiddenSize * 4, -1);
+        _targetConcatNode.init(opts.hiddenSize * 2, -1);
+
+        _grl_node.init(opts.hiddenSize * 2, -1);
+        _target_output.setParam(&model.target_linear);
+        _target_output.init(DOMAIN_SIZE, -1);
         _neural_output.setParam(&model.olayer_linear);
         _neural_output.init(opts.labelSize, -1);
         _modelParams = &model;
@@ -68,15 +83,27 @@ public:
             inputNodes.push_back(&_inputNodes.at(i));
         }
 
+        vector<PNode> tweetNodes;
+        for (int i = normalizedTargetWords.size(); i < totalSize; ++i) {
+            tweetNodes.push_back(&_inputNodes.at(i));
+        }
+
         _left2right.setParam(&_modelParams->target_left_to_right_lstm_params, &_modelParams->tweet_left_to_right_lstm_params, target_words.size());
         _right2left.setParam(&_modelParams->target_right_to_left_lstm_params, &_modelParams->tweet_right_to_left_lstm_params, target_words.size());
 
         _left2right.forward(_graph, inputNodes, normalizedTargetWords.size());
         _right2left.forward(_graph, inputNodes, normalizedTargetWords.size());
-        _concatNode.forward(_graph, &_left2right._hiddens.at(totalSize - 1), &_right2left._hiddens.at(normalizedTargetWords.size()));
 
+        _left2right_tweet.forward(_graph, tweetNodes);
+        _right2left_tweet.forward(_graph, tweetNodes);
+
+        _concatNode.forward(_graph, &_left2right._hiddens.at(totalSize - 1), &_right2left._hiddens.at(normalizedTargetWords.size()),
+            &_left2right_tweet._hiddens.at(tweetNodes.size() - 1), &_right2left_tweet._hiddens.at(0));
+        _targetConcatNode.forward(_graph, &_left2right_tweet._hiddens.at(tweetNodes.size() - 1), &_right2left_tweet._hiddens.at(0));
+        _grl_node.forward(_graph, &_targetConcatNode);
 
         _neural_output.forward(_graph, &_concatNode);
+        _target_output.forward(_graph, &_grl_node);
     }
 };
 

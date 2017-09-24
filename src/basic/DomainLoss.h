@@ -5,7 +5,7 @@
 #include "SoftMaxLoss.h"
 #include "MyLib.h"
 
-dtype loss(PNode x, Target answer, Metric metric, int batchsize) {
+dtype targetLoss(PNode x, Target answer, Metric metric, int batchsize) {
     n3ldg_assert(x->dim == DOMAIN_SIZE, "dim is " << x->dim);
     std::vector<dtype> vector_answer;
     for (int i = 0; i < DOMAIN_SIZE; ++i) {

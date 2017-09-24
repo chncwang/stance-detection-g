@@ -13,6 +13,7 @@
 #include "Stance.h"
 #include "MySoftMaxLoss.h"
 #include "Targets.h"
+#include "DomainLoss.h"
 
 //A native neural network classfier using only word embeddings
 
@@ -33,6 +34,7 @@ public:
     Metric _favor_metric;
     Metric _against_metric;
     Metric _neural_metric;
+    Metric _target_metric;
     CheckGrad _checkgrad;
     ModelUpdate _ada;  // model update
 
@@ -94,7 +96,7 @@ public:
     }
 
 
-    inline dtype train(const vector<Example> &examples, int iter) {
+    std::pair<float, float> train(const vector<Example> &examples, int iter) {
         resetEval();
         _cg.clearValue();
         int example_num = examples.size();
@@ -115,14 +117,17 @@ public:
         }
         _cg.compute();
 
+        dtype targetCost = 0;
+
         for (int count = 0; count < example_num; count++) {
             const Example &example = examples[count];
             cost += _modelparams.loss.loss(&_builders[count]._neural_output,
                 example.m_stance, _favor_metric, _against_metric, _neural_metric, example_num);
+            targetCost += targetLoss(&_builders[count]._target_output, example.m_feature.m_target, _target_metric, example_num);
         }
         _cg.backward();
 
-        return cost;
+        return std::pair<dtype, dtype>(cost, targetCost);
     }
 
     inline void predict(const Feature &feature, Stance &result, int excluded_class) {
@@ -163,6 +168,7 @@ private:
         _favor_metric.reset();
         _against_metric.reset();
         _neural_metric.reset();
+        _target_metric.reset();
     }
 
 
