@@ -122,9 +122,6 @@ void Classifier::train(const string &trainFile, const string &devFile,
     vector<Instance> rawtrainInsts = readInstancesFromFile(trainFile);
     vector<Instance> trainInsts;
     for (Instance &ins : rawtrainInsts) {
-        if (ins.m_target == Target::HILLARY_CLINTON) {
-            continue;
-        }
         trainInsts.push_back(ins);
     }
 
