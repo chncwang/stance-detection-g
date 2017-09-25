@@ -11,6 +11,7 @@ public:
     LookupTable words; // should be initialized outside
     Alphabet wordAlpha; // should be initialized outside
     UniParams olayer_linear; // output
+    AttentionParams attention_params;
     ConditionalLSTMParams tweet_left_to_right_lstm_params;
     ConditionalLSTMParams tweet_right_to_left_lstm_params;
     ConditionalLSTMParams target_left_to_right_lstm_params;
@@ -34,6 +35,7 @@ public:
         tweet_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_left_to_right_lstm_params.initial(opts.hiddenSize, opts.wordDim);
         target_right_to_left_lstm_params.initial(opts.hiddenSize, opts.wordDim);
+        attention_params.initial(opts.hiddenSize * 2, opts.hiddenSize * 2);
         return true;
     }
 
@@ -58,6 +60,7 @@ public:
         target_right_to_left_lstm_params.exportAdaParams(ada);
         tweet_left_to_right_lstm_params.exportAdaParams(ada);
         tweet_right_to_left_lstm_params.exportAdaParams(ada);
+        attention_params.exportAdaParams(ada);
     }
 
 

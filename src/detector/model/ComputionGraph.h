@@ -12,9 +12,11 @@ public:
     vector<LookupNode> _inputNodes;
     ConditionalLSTMBuilder _left2right;
     ConditionalLSTMBuilder _right2left;
-    std::vector<ConcatNode> _concat_nodes;
-    MaxPoolNode _max_pooling;
+    std::vector<ConcatNode> _tweet_concat_nodes;
+    std::vector<ConcatNode> _target_concat_nodes;
+    MaxPoolNode _target_pooling;
     UniNode _neural_output;
+    AttentionBuilder _attention_builder;
 
     Graph *_graph;
     ModelParams *_modelParams;
@@ -26,8 +28,10 @@ public:
         _inputNodes.resize(length_upper_bound);
         _left2right.resize(length_upper_bound);
         _right2left.resize(length_upper_bound);
-        _concat_nodes.resize(length_upper_bound);
-        _max_pooling.setParam(length_upper_bound);
+        _tweet_concat_nodes.resize(length_upper_bound);
+        _target_concat_nodes.resize(length_upper_bound);
+        _target_pooling.setParam(length_upper_bound);
+        _attention_builder.resize(length_upper_bound);
     }
 
 public:
@@ -40,12 +44,17 @@ public:
         _left2right.init(opts.dropProb, &model.target_left_to_right_lstm_params, true);
         _right2left.init(opts.dropProb, &model.target_right_to_left_lstm_params, false);
 
-        for (auto &n : _concat_nodes) {
+        for (auto &n : _target_concat_nodes) {
             n.init(opts.hiddenSize * 2, -1);
         }
-        _max_pooling.init(opts.hiddenSize * 2, -1);
+
+        for (auto &n : _tweet_concat_nodes) {
+            n.init(opts.hiddenSize * 2, -1);
+        }
+        _target_pooling.init(opts.hiddenSize * 2, -1);
         _neural_output.setParam(&model.olayer_linear);
         _neural_output.init(opts.labelSize, -1);
+        _attention_builder.init(&model.attention_params);
         _modelParams = &model;
     }
 
@@ -77,13 +86,19 @@ public:
         _right2left.forward(_graph, inputNodes, target_words.size());
 
         for (int i = 0; i < feature.m_tweet_words.size(); ++i) {
-            _concat_nodes.at(i).forward(_graph, &_left2right._hiddens.at(target_words.size() + i),
+            _tweet_concat_nodes.at(i).forward(_graph, &_left2right._hiddens.at(target_words.size() + i),
                 &_right2left._hiddens.at(target_words.size() + i));
         }
 
-        _max_pooling.forward(_graph, toPointers<ConcatNode, Node>(_concat_nodes, feature.m_tweet_words.size()));
+        for (int i = 0; i < target_words.size(); ++i) {
+            _target_concat_nodes.at(i).forward(_graph, &_left2right._hiddens.at(i), &_right2left._hiddens.at(i));
+        }
 
-        _neural_output.forward(_graph, &_max_pooling);
+        _target_pooling.forward(_graph, toPointers<ConcatNode, Node>(_target_concat_nodes, target_words.size()));
+
+        _attention_builder.forward(_graph, toPointers<ConcatNode, Node>(_tweet_concat_nodes, feature.m_tweet_words.size()), &_target_pooling);
+
+        _neural_output.forward(_graph, &_attention_builder._hidden);
     }
 };
 
