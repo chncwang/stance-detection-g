@@ -64,6 +64,7 @@ public:
             n.init(opts.hiddenSize * 2, -1);
         }
 
+        _grl_node.ratio = opts.grlRatio;
         _grl_node.init(opts.hiddenSize * 2, -1);
         _target_output.setParam(&model.target_linear);
         for (auto &n : _target_concat_nodes) {

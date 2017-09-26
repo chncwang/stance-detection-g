@@ -9,3 +9,4 @@ hiddenSize = 50
 wordEmbSize = 100
 adaAlpha = 0.001
 postProcess = true
+grlRatio = 2.0
