@@ -15,7 +15,7 @@ public:
     std::vector<ConcatNode> _tweet_concat_nodes;
     std::vector<ConcatNode> _target_concat_nodes;
     MaxPoolNode _target_pooling;
-    UniNode _neural_output;
+    LinearNode _neural_output;
     AttentionBuilder _attention_builder;
 
     Graph *_graph;
