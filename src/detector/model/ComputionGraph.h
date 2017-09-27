@@ -25,6 +25,7 @@ public:
     AttentionBuilder _attention_builder;
     GrlNode _grl_node;
     GrlNode _target_ratio_node;
+    std::vector<GrlNode> _input_bp_control_nodes;
 
     ConcatNode _common_domain_concat_node;
     
@@ -46,6 +47,7 @@ public:
         _target_pooling.setParam(length_upper_bound);
         _attention_builder.resize(length_upper_bound);
         _common_pool.setParam(length_upper_bound);
+        _input_bp_control_nodes.resize(length_upper_bound);
     }
 
 public:
@@ -55,6 +57,12 @@ public:
             n.init(opts.wordDim, opts.dropProb);
             n.setParam(&model.words);
         }
+
+        for (auto &n : _input_bp_control_nodes) {
+            n.init(opts.wordDim, opts.dropProb);
+            n.ratio = 0;
+        }
+
         _left2right.init(opts.dropProb, &model.target_left_to_right_lstm_params, true);
         _right2left.init(opts.dropProb, &model.target_right_to_left_lstm_params, false);
 
@@ -104,15 +112,14 @@ public:
             _inputNodes.at(i + target_words.size()).forward(_graph, feature.m_tweet_words.at(i));
         }
 
+        for (int i = 0; i < feature.m_tweet_words.size(); ++i) {
+            _input_bp_control_nodes.at(i).forward(_graph, &_inputNodes.at(i + target_words.size()));
+        }
+
         vector<PNode> inputNodes;
         int totalSize = feature.m_tweet_words.size() + target_words.size();
         for (int i = 0; i < totalSize; ++i) {
             inputNodes.push_back(&_inputNodes.at(i));
-        }
-
-        vector<PNode> tweetNodes;
-        for (int i = target_words.size(); i < totalSize; ++i) {
-            tweetNodes.push_back(&_inputNodes.at(i));
         }
 
         _left2right.setParam(&_modelParams->target_left_to_right_lstm_params, &_modelParams->tweet_left_to_right_lstm_params, target_words.size());
@@ -131,8 +138,11 @@ public:
         }
 
         _target_pooling.forward(_graph, toPointers<ConcatNode, Node>(_target_concat_nodes, target_words.size()));
-        _left2right_tweet.forward(_graph, tweetNodes);
-        _right2left_tweet.forward(_graph, tweetNodes);
+
+        std::vector<PNode> input_control_nodes = toPointers<GrlNode, Node>(_input_bp_control_nodes, feature.m_tweet_words.size());
+
+        _left2right_tweet.forward(_graph, input_control_nodes);
+        _right2left_tweet.forward(_graph, input_control_nodes);
 
         for (int i = 0; i < feature.m_tweet_words.size(); ++i) {
             _common_concat_nodes.at(i).forward(_graph, &_left2right_tweet._hiddens.at(i), &_right2left_tweet._hiddens.at(i));
