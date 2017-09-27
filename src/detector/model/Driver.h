@@ -123,7 +123,7 @@ public:
             const Example &example = examples[count];
             cost += _modelparams.loss.loss(&_builders[count]._neural_output,
                 example.m_stance, _favor_metric, _against_metric, _neural_metric, example_num);
-            targetCost += targetLoss(&_builders[count]._target_output, example.m_feature.m_target, _target_metric, example_num);
+            targetCost += targetLoss(&_builders[count]._target_ratio_node, example.m_feature.m_target, _target_metric, example_num);
         }
         _cg.backward();
 

@@ -143,6 +143,7 @@ public:
 
         _attention_builder.forward(_graph, toPointers<ConcatNode, Node>(_tweet_concat_nodes, feature.m_tweet_words.size()), &_target_pooling);
         _target_output.forward(_graph, &_grl_node);
+        _target_ratio_node.forward(_graph, &_target_output);
         _neural_output.forward(_graph, &_common_domain_concat_node);
     }
 };
