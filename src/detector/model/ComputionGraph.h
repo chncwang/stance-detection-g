@@ -24,6 +24,7 @@ public:
     UniNode _target_output;
     AttentionBuilder _attention_builder;
     GrlNode _grl_node;
+    GrlNode _target_ratio_node;
 
     ConcatNode _common_domain_concat_node;
     
@@ -76,6 +77,10 @@ public:
         }
         _target_pooling.init(opts.hiddenSize * 2, -1);
         _target_output.init(DOMAIN_SIZE, -1);
+
+        _target_ratio_node.ratio = opts.targetRatio;
+        _target_ratio_node.init(DOMAIN, -1);
+
         _neural_output.setParam(&model.olayer_linear);
         _neural_output.init(opts.labelSize, -1);
         _attention_builder.init(&model.attention_params);

@@ -28,6 +28,7 @@ struct HyperParams{
 	int inputSize;
 	int labelSize;
     float grlRatio;
+    float targetRatio;
 
 public:
 	HyperParams(){
@@ -46,6 +47,7 @@ public:
 		hiddenDropProb = opt.hiddenDropProb;
 		batch = opt.batchSize;
         grlRatio = opt.grlRatio;
+        targetRatio = opt.targetRatio;
 
 		bAssigned = true;
 	}

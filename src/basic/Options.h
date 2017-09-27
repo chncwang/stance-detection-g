@@ -41,6 +41,7 @@ public:
 	string outBest;
 	bool seg;
     float grlRatio = 1.0;
+    float targetRatio = 1.0;
 
 	//embedding files
 	string wordFile;
@@ -138,6 +139,8 @@ public:
                 postProcess = (pr.second == "true");
             if (pr.first == "grlRatio")
                 grlRatio = atof(pr.second.c_str());
+            if (pr.first == "targetRatio")
+                targetRatio = atof(pr.second.c_str());
 		}
 	}
 
@@ -172,6 +175,7 @@ public:
 		std::cout << "wordFile = " << wordFile << std::endl;
         std::cout << "postProcess = "<< postProcess << std::endl;
         std::cout << "grlRatio = "<< grlRatio << std::endl;
+        std::cout << "targetRatio = "<< targetRatio << std::endl;
 	}
 
 	void load(const std::string& infile) {
