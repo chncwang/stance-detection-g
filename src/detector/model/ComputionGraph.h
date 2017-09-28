@@ -13,7 +13,8 @@ public:
     ConditionalLSTMBuilder _left2right;
     ConditionalLSTMBuilder _right2left;
     ConcatNode _concatNode;
-    UniNode _neural_output;
+    ReluNode _relu_node;
+    LinearNode _neural_output;
 
     Graph *_graph;
     ModelParams *_modelParams;
@@ -38,6 +39,7 @@ public:
         _right2left.init(opts.dropProb, &model.target_right_to_left_lstm_params, false);
 
         _concatNode.init(opts.hiddenSize * 2, -1);
+        _relu_node.init(opts.hiddenSize * 2, -1);
         _neural_output.setParam(&model.olayer_linear);
         _neural_output.init(opts.labelSize, -1);
         _modelParams = &model;
@@ -74,9 +76,9 @@ public:
         _left2right.forward(_graph, inputNodes, normalizedTargetWords.size());
         _right2left.forward(_graph, inputNodes, normalizedTargetWords.size());
         _concatNode.forward(_graph, &_left2right._hiddens.at(totalSize - 1), &_right2left._hiddens.at(normalizedTargetWords.size()));
+        _relu_node.forward(_graph, &_concatNode);
 
-
-        _neural_output.forward(_graph, &_concatNode);
+        _neural_output.forward(_graph, &_relu_node);
     }
 };
 
