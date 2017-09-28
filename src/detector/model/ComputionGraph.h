@@ -14,7 +14,8 @@ public:
     ConditionalLSTMBuilder _right2left;
     std::vector<ConcatNode> _concat_nodes;
     MaxPoolNode _max_pooling;
-    UniNode _neural_output;
+    ReluNode _relu_node;
+    LinearNode _neural_output;
 
     Graph *_graph;
     ModelParams *_modelParams;
@@ -43,6 +44,7 @@ public:
         for (auto &n : _concat_nodes) {
             n.init(opts.hiddenSize * 2, -1);
         }
+        _relu_node.init(opts.hiddenSize * 2, -1);
         _max_pooling.init(opts.hiddenSize * 2, -1);
         _neural_output.setParam(&model.olayer_linear);
         _neural_output.init(opts.labelSize, -1);
@@ -76,14 +78,15 @@ public:
         _left2right.forward(_graph, inputNodes, target_words.size());
         _right2left.forward(_graph, inputNodes, target_words.size());
 
+
         for (int i = 0; i < feature.m_tweet_words.size(); ++i) {
             _concat_nodes.at(i).forward(_graph, &_left2right._hiddens.at(target_words.size() + i),
                 &_right2left._hiddens.at(target_words.size() + i));
         }
-
         _max_pooling.forward(_graph, toPointers<ConcatNode, Node>(_concat_nodes, feature.m_tweet_words.size()));
+        _relu_node.forward(_graph, &_max_pooling);
 
-        _neural_output.forward(_graph, &_max_pooling);
+        _neural_output.forward(_graph, &_relu_node);
     }
 };
 
